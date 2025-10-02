@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2048 Game - Autoplay Mode</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .autoplay-controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .autoplay-button {
+            background: #8f7a66;
+            color: #f9f6f2;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: background 0.3s;
+        }
+        .autoplay-button:hover {
+            background: #9f8a76;
+        }
+        .autoplay-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .autoplay-status {
+            margin: 10px 0;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .autoplay-stats {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #776e65;
+        }
+        .stat-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #999;
+        }
+        .speed-control {
+            margin: 10px 0;
+        }
+        .speed-slider {
+            width: 200px;
+            margin: 0 10px;
+        }
+        .history-section {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .history-controls {
+            margin-bottom: 15px;
+        }
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .history-table th,
+        .history-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        .history-table th {
+            background: #8f7a66;
+            color: white;
+            font-weight: bold;
+        }
+        .history-table tr:hover {
+            background: #f5f5f5;
+        }
+        .replay-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .replay-button:hover {
+            background: #45a049;
+        }
+        .delete-button {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+        .delete-button:hover {
+            background: #da190b;
+        }
+        .win-badge {
+            background: #4CAF50;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+        .loss-badge {
+            background: #f44336;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+        .replay-status {
+            background: #e3f2fd;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .pagination {
+            text-align: center;
+            margin: 15px 0;
+        }
+        .pagination button {
+            background: #8f7a66;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            margin: 0 2px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .pagination button:hover {
+            background: #9f8a76;
+        }
+        .pagination button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>2048 - Autoplay Mode</h1>
+        
+        <div class="autoplay-controls">
+            <button id="startAutoplay" class="autoplay-button">Start Autoplay</button>
+            <button id="stopAutoplay" class="autoplay-button" disabled>Stop Autoplay</button>
+            <button id="resetGame" class="autoplay-button">Reset Game</button>
+        </div>
+
+        <div class="speed-control">
+            <label>Speed: </label>
+            <input type="range" id="speedSlider" class="speed-slider" min="50" max="2000" value="500">
+            <span id="speedValue">500ms</span>
+        </div>
+
+        <div class="autoplay-status" id="autoplayStatus">Ready to start autoplay</div>
+
+        <div class="autoplay-stats">
+            <div class="stat-item">
+                <div class="stat-value" id="movesCount">0</div>
+                <div class="stat-label">Moves</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="gamesPlayed">0</div>
+                <div class="stat-label">Games</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="winCount">0</div>
+                <div class="stat-label">Wins</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="lossCount">0</div>
+                <div class="stat-label">Losses</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="highestTile">0</div>
+                <div class="stat-label">Highest Tile</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="avgScore">0</div>
+                <div class="stat-label">Avg Score</div>
+            </div>
+        </div>
+        
+        <div class="score-container">
+            <div class="score-box">
+                <div class="score-label">Score</div>
+                <div id="score">0</div>
+            </div>
+            <div class="score-box">
+                <div class="score-label">Best</div>
+                <div id="best">0</div>
+            </div>
+        </div>
+        
+        <div class="game-container">
+            <div class="grid-container">
+                <div class="grid-row">
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell"></div>
+                </div>
+                <div class="grid-row">
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell"></div>
+                </div>
+                <div class="grid-row">
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell"></div>
+                </div>
+                <div class="grid-row">
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell"></div>
+                </div>
+            </div>
+            <div class="tile-container"></div>
+        </div>
+        
+        <div class="game-message" id="game-message">
+            <div class="message-content">
+                <div class="message-text"></div>
+                <button class="restart-button" onclick="autoplayGame.restart()">Try Again</button>
+            </div>
+        </div>
+        
+        <div class="replay-status" id="replayStatus" style="display: none;"></div>
+        
+        <div class="history-section">
+            <h2>Game History & Replay</h2>
+            <div class="history-controls">
+                <button id="clearHistory" class="autoplay-button">Clear History</button>
+                <button id="exportHistory" class="autoplay-button">Export Data</button>
+                <button id="importHistory" class="autoplay-button">Import Data</button>
+                <input type="file" id="importFile" accept=".json" style="display: none;">
+            </div>
+            
+            <div class="pagination">
+                <button id="prevPage">Previous</button>
+                <span id="pageInfo">Page 1 of 1</span>
+                <button id="nextPage">Next</button>
+            </div>
+            
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Game #</th>
+                        <th>Date</th>
+                        <th>Result</th>
+                        <th>Score</th>
+                        <th>Moves</th>
+                        <th>Highest Tile</th>
+                        <th>Duration</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="historyTableBody">
+                    <tr>
+                        <td colspan="8" style="text-align: center; color: #999;">No games recorded yet</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="instructions">
+            <p><strong>AUTOPLAY MODE:</strong> Watch the AI play 2048 automatically using a strategic algorithm!</p>
+            <p>The AI uses a corner strategy prioritizing: Down → Right → Left → Up</p>
+            <p><strong>HISTORY:</strong> All games are automatically recorded and can be replayed later!</p>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+    <script>
+        class AutoplayGame2048 extends Game2048 {
+            constructor() {
+                super();
+                this.isAutoPlaying = false;
+                this.isReplaying = false;
+                this.autoplayInterval = null;
+                this.replayInterval = null;
+                this.moveDelay = 500;
+                this.currentGameRecord = null;
+                this.gameStartTime = null;
+                this.currentPage = 1;
+                this.gamesPerPage = 10;
+                this.stats = {
+                    moves: 0,
+                    gamesPlayed: 0,
+                    wins: 0,
+                    losses: 0,
+                    totalScore: 0,
+                    highestTile: 0
+                };
+                this.setupAutoplayControls();
+                this.loadHistoryFromStorage();
+                this.updateHistoryDisplay();
+            }
+
+            setupAutoplayControls() {
+                const startBtn = document.getElementById('startAutoplay');
+                const stopBtn = document.getElementById('stopAutoplay');
+                const resetBtn = document.getElementById('resetGame');
+                const speedSlider = document.getElementById('speedSlider');
+                const speedValue = document.getElementById('speedValue');
+                const clearHistoryBtn = document.getElementById('clearHistory');
+                const exportBtn = document.getElementById('exportHistory');
+                const importBtn = document.getElementById('importHistory');
+                const importFile = document.getElementById('importFile');
+                const prevPageBtn = document.getElementById('prevPage');
+                const nextPageBtn = document.getElementById('nextPage');
+
+                startBtn.addEventListener('click', () => this.startAutoplay());
+                stopBtn.addEventListener('click', () => this.stopAutoplay());
+                resetBtn.addEventListener('click', () => this.resetStats());
+                clearHistoryBtn.addEventListener('click', () => this.clearHistory());
+                exportBtn.addEventListener('click', () => this.exportHistory());
+                importBtn.addEventListener('click', () => importFile.click());
+                importFile.addEventListener('change', (e) => this.importHistory(e));
+                prevPageBtn.addEventListener('click', () => this.changePage(-1));
+                nextPageBtn.addEventListener('click', () => this.changePage(1));
+                
+                speedSlider.addEventListener('input', (e) => {
+                    this.moveDelay = parseInt(e.target.value);
+                    speedValue.textContent = `${this.moveDelay}ms`;
+                    if (this.isAutoPlaying) {
+                        this.stopAutoplay();
+                        this.startAutoplay();
+                    }
+                });
+            }
+
+            startAutoplay() {
+                if (this.isAutoPlaying || this.isReplaying) return;
+                
+                this.isAutoPlaying = true;
+                this.startNewGameRecord();
+                document.getElementById('startAutoplay').disabled = true;
+                document.getElementById('stopAutoplay').disabled = false;
+                document.getElementById('autoplayStatus').textContent = 'Autoplay running...';
+                
+                this.autoplayInterval = setInterval(() => {
+                    this.makeAutoMove();
+                }, this.moveDelay);
+            }
+
+            startNewGameRecord() {
+                this.gameStartTime = Date.now();
+                this.currentGameRecord = {
+                    id: Date.now(),
+                    startTime: this.gameStartTime,
+                    moves: [],
+                    initialGrid: this.grid.map(row => [...row]),
+                    finalScore: 0,
+                    finalGrid: null,
+                    result: 'ongoing',
+                    highestTile: 0,
+                    duration: 0
+                };
+            }
+
+            stopAutoplay() {
+                if (!this.isAutoPlaying && !this.isReplaying) return;
+                
+                this.isAutoPlaying = false;
+                this.isReplaying = false;
+                clearInterval(this.autoplayInterval);
+                clearInterval(this.replayInterval);
+                document.getElementById('startAutoplay').disabled = false;
+                document.getElementById('stopAutoplay').disabled = true;
+                document.getElementById('autoplayStatus').textContent = 'Autoplay stopped';
+                document.getElementById('replayStatus').style.display = 'none';
+            }
+
+            makeAutoMove() {
+                if (this.isGameOver()) {
+                    this.handleGameEnd();
+                    return;
+                }
+
+                if (this.hasWon() && this.currentGameRecord && this.currentGameRecord.result === 'ongoing') {
+                    this.handleWin();
+                    return;
+                }
+
+                // AI Strategy: Corner strategy (prioritize down, right, left, up)
+                const moves = ['ArrowDown', 'ArrowRight', 'ArrowLeft', 'ArrowUp'];
+                let moveMade = false;
+
+                for (const move of moves) {
+                    const previousGrid = this.grid.map(row => [...row]);
+                    const previousScore = this.score;
+                    
+                    // Try the move
+                    this.handleKeyPress(move);
+                    
+                    // Check if the move changed the board
+                    if (JSON.stringify(previousGrid) !== JSON.stringify(this.grid) || previousScore !== this.score) {
+                        moveMade = true;
+                        this.stats.moves++;
+                        
+                        // Record the move
+                        if (this.currentGameRecord) {
+                            this.currentGameRecord.moves.push({
+                                move: move,
+                                gridBefore: previousGrid,
+                                gridAfter: this.grid.map(row => [...row]),
+                                scoreBefore: previousScore,
+                                scoreAfter: this.score,
+                                timestamp: Date.now() - this.gameStartTime
+                            });
+                        }
+                        
+                        this.updateStats();
+                        break;
+                    }
+                }
+
+                if (!moveMade) {
+                    // No valid moves available
+                    this.handleGameEnd();
+                }
+            }
+
+            hasWon() {
+                for (let row = 0; row < this.size; row++) {
+                    for (let col = 0; col < this.size; col++) {
+                        if (this.grid[row][col] >= 2048) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+
+            handleWin() {
+                this.stats.wins++;
+                this.stats.gamesPlayed++;
+                this.stats.totalScore += this.score;
+                this.updateHighestTile();
+                this.updateStats();
+                
+                // Update game record
+                if (this.currentGameRecord) {
+                    this.currentGameRecord.result = 'win';
+                    this.currentGameRecord.finalScore = this.score;
+                    this.currentGameRecord.finalGrid = this.grid.map(row => [...row]);
+                    this.currentGameRecord.duration = Date.now() - this.gameStartTime;
+                    this.updateHighestTile();
+                    this.currentGameRecord.highestTile = this.stats.highestTile;
+                }
+                
+                document.getElementById('autoplayStatus').textContent = `🎉 WIN! Reached 2048 in ${this.stats.moves} moves!`;
+                
+                // Continue playing to see how high we can go
+                setTimeout(() => {
+                    if (this.isAutoPlaying) {
+                        document.getElementById('autoplayStatus').textContent = 'Continuing to play for higher tiles...';
+                    }
+                }, 2000);
+            }
+
+            handleGameEnd() {
+                this.stats.losses++;
+                this.stats.gamesPlayed++;
+                this.stats.totalScore += this.score;
+                this.updateHighestTile();
+                this.updateStats();
+                
+                // Finalize game record
+                if (this.currentGameRecord) {
+                    if (this.currentGameRecord.result === 'ongoing') {
+                        this.currentGameRecord.result = 'loss';
+                    }
+                    this.currentGameRecord.finalScore = this.score;
+                    this.currentGameRecord.finalGrid = this.grid.map(row => [...row]);
+                    this.currentGameRecord.duration = Date.now() - this.gameStartTime;
+                    this.updateHighestTile();
+                    this.currentGameRecord.highestTile = this.stats.highestTile;
+                    
+                    // Save to history
+                    this.saveGameToHistory(this.currentGameRecord);
+                    this.updateHistoryDisplay();
+                }
+                
+                document.getElementById('autoplayStatus').textContent = `Game Over! Score: ${this.score}, Moves: ${this.stats.moves}`;
+                
+                // Auto-restart after 2 seconds
+                setTimeout(() => {
+                    if (this.isAutoPlaying) {
+                        this.restart();
+                        this.stats.moves = 0; // Reset move counter for new game
+                        this.startNewGameRecord(); // Start recording new game
+                        document.getElementById('autoplayStatus').textContent = 'Starting new game...';
+                    }
+                }, 2000);
+            }
+
+            updateHighestTile() {
+                let highest = 0;
+                for (let row = 0; row < this.size; row++) {
+                    for (let col = 0; col < this.size; col++) {
+                        if (this.grid[row][col] > highest) {
+                            highest = this.grid[row][col];
+                        }
+                    }
+                }
+                if (highest > this.stats.highestTile) {
+                    this.stats.highestTile = highest;
+                }
+            }
+
+            updateStats() {
+                document.getElementById('movesCount').textContent = this.stats.moves;
+                document.getElementById('gamesPlayed').textContent = this.stats.gamesPlayed;
+                document.getElementById('winCount').textContent = this.stats.wins;
+                document.getElementById('lossCount').textContent = this.stats.losses;
+                document.getElementById('highestTile').textContent = this.stats.highestTile;
+                
+                const avgScore = this.stats.gamesPlayed > 0 ? 
+                    Math.round(this.stats.totalScore / this.stats.gamesPlayed) : 0;
+                document.getElementById('avgScore').textContent = avgScore;
+            }
+
+            resetStats() {
+                this.stopAutoplay();
+                this.stats = {
+                    moves: 0,
+                    gamesPlayed: 0,
+                    wins: 0,
+                    losses: 0,
+                    totalScore: 0,
+                    highestTile: 0
+                };
+                this.updateStats();
+                this.restart();
+                document.getElementById('autoplayStatus').textContent = 'Stats reset - Ready to start autoplay';
+            }
+
+            restart() {
+                super.restart();
+                this.stats.moves = 0;
+                this.updateStats();
+            }
+
+            // History Management Methods
+            saveGameToHistory(gameRecord) {
+                let history = JSON.parse(localStorage.getItem('2048_game_history') || '[]');
+                history.unshift(gameRecord); // Add to beginning
+                
+                // Keep only last 1000 games to prevent storage overflow
+                if (history.length > 1000) {
+                    history = history.slice(0, 1000);
+                }
+                
+                localStorage.setItem('2048_game_history', JSON.stringify(history));
+            }
+
+            loadHistoryFromStorage() {
+                this.gameHistory = JSON.parse(localStorage.getItem('2048_game_history') || '[]');
+            }
+
+            updateHistoryDisplay() {
+                const tbody = document.getElementById('historyTableBody');
+                const startIndex = (this.currentPage - 1) * this.gamesPerPage;
+                const endIndex = startIndex + this.gamesPerPage;
+                const pageGames = this.gameHistory.slice(startIndex, endIndex);
+                
+                if (pageGames.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #999;">No games recorded yet</td></tr>';
+                } else {
+                    tbody.innerHTML = pageGames.map((game, index) => {
+                        const gameNumber = this.gameHistory.length - startIndex - index;
+                        const date = new Date(game.startTime).toLocaleDateString();
+                        const time = new Date(game.startTime).toLocaleTimeString();
+                        const duration = this.formatDuration(game.duration);
+                        const resultBadge = game.result === 'win' ? 
+                            '<span class="win-badge">WIN</span>' : 
+                            '<span class="loss-badge">LOSS</span>';
+                        
+                        return `
+                            <tr>
+                                <td>#${gameNumber}</td>
+                                <td>${date}<br><small>${time}</small></td>
+                                <td>${resultBadge}</td>
+                                <td>${game.finalScore.toLocaleString()}</td>
+                                <td>${game.moves.length}</td>
+                                <td>${game.highestTile}</td>
+                                <td>${duration}</td>
+                                <td>
+                                    <button class="replay-button" onclick="autoplayGame.replayGame(${game.id})">Replay</button>
+                                    <button class="delete-button" onclick="autoplayGame.deleteGame(${game.id})">Delete</button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+                
+                // Update pagination
+                const totalPages = Math.ceil(this.gameHistory.length / this.gamesPerPage);
+                document.getElementById('pageInfo').textContent = `Page ${this.currentPage} of ${totalPages}`;
+                document.getElementById('prevPage').disabled = this.currentPage <= 1;
+                document.getElementById('nextPage').disabled = this.currentPage >= totalPages;
+            }
+
+            formatDuration(ms) {
+                const seconds = Math.floor(ms / 1000);
+                const minutes = Math.floor(seconds / 60);
+                const remainingSeconds = seconds % 60;
+                return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+            }
+
+            changePage(direction) {
+                const totalPages = Math.ceil(this.gameHistory.length / this.gamesPerPage);
+                this.currentPage = Math.max(1, Math.min(totalPages, this.currentPage + direction));
+                this.updateHistoryDisplay();
+            }
+
+            replayGame(gameId) {
+                if (this.isAutoPlaying) {
+                    this.stopAutoplay();
+                }
+                
+                const game = this.gameHistory.find(g => g.id === gameId);
+                if (!game) return;
+                
+                this.isReplaying = true;
+                document.getElementById('startAutoplay').disabled = true;
+                document.getElementById('stopAutoplay').disabled = false;
+                document.getElementById('replayStatus').style.display = 'block';
+                document.getElementById('replayStatus').textContent = `Replaying Game #${gameId} - ${game.moves.length} moves`;
+                
+                // Reset to initial state
+                this.grid = game.initialGrid.map(row => [...row]);
+                this.score = 0;
+                this.updateDisplay();
+                this.updateScore();
+                
+                let moveIndex = 0;
+                this.replayInterval = setInterval(() => {
+                    if (moveIndex >= game.moves.length) {
+                        clearInterval(this.replayInterval);
+                        this.isReplaying = false;
+                        document.getElementById('startAutoplay').disabled = false;
+                        document.getElementById('stopAutoplay').disabled = true;
+                        document.getElementById('replayStatus').textContent = `Replay completed! Final result: ${game.result.toUpperCase()}`;
+                        return;
+                    }
+                    
+                    const move = game.moves[moveIndex];
+                    this.grid = move.gridAfter.map(row => [...row]);
+                    this.score = move.scoreAfter;
+                    this.updateDisplay();
+                    this.updateScore();
+                    
+                    document.getElementById('replayStatus').textContent = 
+                        `Replaying move ${moveIndex + 1}/${game.moves.length} - ${move.move.replace('Arrow', '')}`;
+                    
+                    moveIndex++;
+                }, this.moveDelay);
+            }
+
+            deleteGame(gameId) {
+                if (confirm('Are you sure you want to delete this game record?')) {
+                    this.gameHistory = this.gameHistory.filter(g => g.id !== gameId);
+                    localStorage.setItem('2048_game_history', JSON.stringify(this.gameHistory));
+                    this.updateHistoryDisplay();
+                }
+            }
+
+            clearHistory() {
+                if (confirm('Are you sure you want to clear all game history? This cannot be undone.')) {
+                    this.gameHistory = [];
+                    localStorage.removeItem('2048_game_history');
+                    this.currentPage = 1;
+                    this.updateHistoryDisplay();
+                }
+            }
+
+            exportHistory() {
+                const data = {
+                    exportDate: new Date().toISOString(),
+                    totalGames: this.gameHistory.length,
+                    games: this.gameHistory
+                };
+                
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `2048_game_history_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            importHistory(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        if (data.games && Array.isArray(data.games)) {
+                            if (confirm(`Import ${data.games.length} games? This will merge with existing history.`)) {
+                                this.gameHistory = [...data.games, ...this.gameHistory];
+                                localStorage.setItem('2048_game_history', JSON.stringify(this.gameHistory));
+                                this.updateHistoryDisplay();
+                                alert(`Successfully imported ${data.games.length} games!`);
+                            }
+                        } else {
+                            alert('Invalid file format!');
+                        }
+                    } catch (error) {
+                        alert('Error reading file: ' + error.message);
+                    }
+                };
+                reader.readAsText(file);
+                event.target.value = ''; // Reset file input
+            }
+        }
+
+        // Initialize the autoplay game
+        const autoplayGame = new AutoplayGame2048();
+    </script>
+</body>
+</html>
