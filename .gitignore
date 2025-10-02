@@ -1,0 +1,60 @@
+# Kiro IDE and Workspace Files
+*.code-workspace
+KiroProjects*.code-workspace
+.vscode/
+.kiro/settings/
+
+# Temporary and Working Files
+*.tmp
+*.temp
+*~
+.DS_Store
+Thumbs.db
+
+# Game History and User Data (keep local only)
+2048_game_history_*.json
+*.jpg
+*.png
+*.gif
+*.jpeg
+
+# Log Files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime and Cache
+.cache/
+.temp/
+node_modules/
+
+# OS Generated Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE and Editor Files
+.idea/
+*.swp
+*.swo
+*~
+
+# Backup Files
+*.bak
+*.backup
+*.old
+
+# Test Coverage and Reports (optional - you might want to keep test-report.html)
+coverage/
+*.lcov
+
+# Personal Notes and Drafts
+notes.txt
+draft*
+todo.txt
+scratch*
